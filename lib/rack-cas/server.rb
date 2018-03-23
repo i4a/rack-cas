@@ -36,12 +36,12 @@ module RackCAS
     protected
 
     def saml_validate_url(service_url)
-      service_url = URL.parse(service_url).remove_param('ticket').to_s
+      service_url = service_url_given_or_configured(service_url)
       @url.dup.append_path(path_for_protocol('samlValidate')).add_params(TARGET: service_url)
     end
 
     def validate_service_url(service_url, ticket)
-      service_url = URL.parse(service_url).remove_param('ticket').to_s
+      service_url = service_url_given_or_configured(service_url)
       @url.dup.append_path(path_for_protocol('serviceValidate')).add_params(service: service_url, ticket: ticket)
     end
 
@@ -51,6 +51,10 @@ module RackCAS
       else
         path
       end
+    end
+
+    def service_url_given_or_configured(service_url)
+      RackCAS.config.service? ? RackCAS.config.service : URL.parse(service_url).remove_param('ticket').to_s
     end
   end
 end
