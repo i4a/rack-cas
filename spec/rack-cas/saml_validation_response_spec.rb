@@ -27,6 +27,12 @@ describe RackCAS::SAMLValidationResponse do
       expect{ subject.user }.to raise_error RackCAS::SAMLValidationResponse::AuthenticationFailure, "ticket 'ST-718673-vjzOrfL70HlOb5TviNTT-odo-665.example.org' not recognized"
       expect{ subject.extra_attributes}.to raise_error RackCAS::SAMLValidationResponse::AuthenticationFailure, "ticket 'ST-718673-vjzOrfL70HlOb5TviNTT-odo-665.example.org' not recognized"
     end
+
+    it 'should raise an authentication failure exception' do
+      allow_any_instance_of(Net::HTTP).to receive(:post).and_raise(Net::ReadTimeout)
+
+      expect{ subject.user }.to raise_error RackCAS::SAMLValidationResponse::AuthenticationFailure, "Net::ReadTimeout: ticket 'ST-718673-vjzOrfL70HlOb5TviNTT-odo-665.example.org' not recognized"
+      expect{ subject.extra_attributes}.to raise_error RackCAS::SAMLValidationResponse::AuthenticationFailure, "Net::ReadTimeout: ticket 'ST-718673-vjzOrfL70HlOb5TviNTT-odo-665.example.org' not recognized"
+    end
   end
 end
-
