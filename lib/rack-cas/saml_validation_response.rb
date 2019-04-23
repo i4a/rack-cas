@@ -80,7 +80,14 @@ module RackCAS
         </SOAP-ENV:Body>
       </SOAP-ENV:Envelope>~
 
-      @response = http.post(@url.request_uri, data, REQUEST_HEADERS)
+      begin
+        @response = http.post(@url.request_uri, data, REQUEST_HEADERS)
+      rescue Net::ReadTimeout
+        @response = nil
+        raise(AuthenticationFailure, "Net::ReadTimeout: ticket '#{@ticket}' not recognized")
+      end
+
+      @response
     end
 
     def xml
