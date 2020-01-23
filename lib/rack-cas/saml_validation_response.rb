@@ -15,7 +15,7 @@ module RackCAS
 
     def user
       if success?
-        xml.at('//Response/Assertion/AuthenticationStatement/Subject/NameIdentifier').text
+        xml_text_at('//Response/Assertion/AuthenticationStatement/Subject/NameIdentifier')
       else
         raise AuthenticationFailure, failure_message
       end
@@ -26,11 +26,14 @@ module RackCAS
 
       raise AuthenticationFailure, failure_message unless success?
 
-      xml.at('//Response/Assertion/AttributeStatement').children.each do |node|
+      attribute_statement = xml.at('//Response/Assertion/AttributeStatement')
+      return unless attribute_statement
+
+      attribute_statement.children.each do |node|
         key = node.at('@AttributeName')
 
         if key
-          values = node.xpath('AttributeValue').map { |n| n.text }
+          values = node.xpath('AttributeValue').map(&:text)
 
           values = values.first if values.size == 1
 
@@ -44,7 +47,7 @@ module RackCAS
     protected
 
     def success?
-      @success ||= xml.at('//Response/Status/StatusCode/@Value').text =~ /saml1?p:Success/
+      @success ||= xml_text_at('//Response/Status/StatusCode/@Value') =~ /saml1?p:Success/
     end
 
     def authentication_failure
@@ -53,7 +56,7 @@ module RackCAS
 
     def failure_message
       if authentication_failure
-        xml.at('//Response/Status/StatusMessage').text.strip
+        xml_text_at('//Response/Status/StatusMessage').strip
       end
     end
 
@@ -94,6 +97,13 @@ module RackCAS
       return @xml unless @xml.nil?
 
       @xml = Nokogiri::XML(response.body).remove_namespaces!
+    end
+
+    def xml_text_at(path)
+      element = xml.at(path)
+      return unless element
+
+      element.text
     end
 
     def ip_address
